@@ -1,0 +1,7 @@
+build/
+*.accdb
+*.laccdb
+webapp/node_modules/
+webapp/.next/
+webapp/cinema.db
+.DS_Store
