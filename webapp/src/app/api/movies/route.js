@@ -1,4 +1,4 @@
-import { openDB } from '../../lib/db';
+import { openDB } from '../../../lib/db';
 
 export async function GET(request) {
   const db = await openDB();
