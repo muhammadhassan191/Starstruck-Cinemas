@@ -38,13 +38,13 @@ export async function openDB() {
   const count = await db.get("SELECT COUNT(*) as c FROM Movies");
   if (count.c === 0) {
     // Hollywood
-    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('Spider-Man: No Way Home', 15, 120, '2026-06-01', 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1ZrsNdGELTXQgw.jpg')");
-    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('Dune: Part Two', 20, 200, '2026-06-15', 'https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2IGpbunSj.jpg')");
-    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('Inception', 12, 80, '2026-07-04', 'https://image.tmdb.org/t/p/w500/8kOWDBK6XlPUzckuHDo3xWVRJ1M.jpg')");
+    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('Spider-Man: No Way Home', 15, 120, '2026-06-01', 'https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcQSdnOkKE9dBN68bYDK4FNPszoUkeG4X7XCJCTsgpfCP-EY9GIx')");
+    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('Dune: Part Two', 20, 200, '2026-06-15', 'https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcRBu8Gzdygf5OOqBJUIJ3-ZxiPbLh62OhvLmtOvuR7x2gF3DucU')");
+    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('Inception', 12, 80, '2026-07-04', 'https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQovCe0H45fWwAtV31ajOdXRPTxSsMQgPIQ3lcZX_mAW0jXV3kH')");
     // Bollywood
-    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('3 Idiots', 10, 100, '2026-05-20', 'https://image.tmdb.org/t/p/w500/66A90oEXt41ib1f2bIfxosR10nU.jpg')");
-    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('Dangal', 14, 150, '2026-05-25', 'https://image.tmdb.org/t/p/w500/aHkNJNWNqfF57wJHTcZtqH2Z4E3.jpg')");
-    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('Jawan', 18, 250, '2026-06-10', 'https://image.tmdb.org/t/p/w500/jpfkzbIXgKZqCZAkAezdEMtI1Y.jpg')");
+    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('3 Idiots', 10, 100, '2026-05-20', 'https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcQV7sONOx4fl1xq9CbdWUmcTamWwzrPMzqKhZOGHh-V0zHpn0Ly')");
+    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('Dangal', 14, 150, '2026-05-25', 'https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQMCj20Dhxm40PDsgiS1lMZaNj8lepMfMv9zn3LsbwLWu2ovzUk')");
+    await db.run("INSERT INTO Movies (name, price, available_seats, date, poster_path) VALUES ('Jawan', 18, 250, '2026-06-10', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQA8fxJgOk6Q4UGjmsa1q3CQ1Q05Lt0Dn1leAl6_KexCEjqJAe6')");
   }
 
   return db;

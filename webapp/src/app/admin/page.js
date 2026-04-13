@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 export default function AdminPage() {
   const [movies, setMovies] = useState([]);
-  const [form, setForm] = useState({ name: '', price: '', available_seats: '', date: '' });
+  const [form, setForm] = useState({ name: '', price: '', available_seats: '', date: '', poster_path: '' });
   
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,7 +45,7 @@ export default function AdminPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)
     });
-    setForm({ name: '', price: '', available_seats: '', date: '' });
+    setForm({ name: '', price: '', available_seats: '', date: '', poster_path: '' });
     fetchMovies();
   };
 
@@ -77,6 +77,7 @@ export default function AdminPage() {
             <input className="input-field" placeholder="Ticket Price" type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} required/>
             <input className="input-field" placeholder="Seat Capacity" type="number" value={form.available_seats} onChange={e => setForm({...form, available_seats: e.target.value})} required/>
             <input className="input-field" placeholder="Date (e.g. 2026-05-10)" value={form.date} onChange={e => setForm({...form, date: e.target.value})} required/>
+            <input className="input-field" placeholder="Poster Image URL (optional)" value={form.poster_path} onChange={e => setForm({...form, poster_path: e.target.value})}/>
             <button className="btn" type="submit">Deploy to Database</button>
           </form>
         </div>
