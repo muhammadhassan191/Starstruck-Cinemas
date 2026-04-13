@@ -66,11 +66,11 @@ export default function AdminPage() {
   }
 
   return (
-    <div>
+    <div className="container">
       <h1 style={{marginBottom: '2rem'}}>Admin Control Panel</h1>
       
-      <div style={{display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '2rem'}}>
-        <div className="glass-panel" style={{alignSelf: 'start'}}>
+      <div style={{display: 'flex', flexWrap: 'wrap', gap: '2rem'}}>
+        <div className="glass-panel" style={{flex: '1 1 300px', alignSelf: 'start'}}>
           <h3 style={{marginBottom: '1rem'}}>Add Show</h3>
           <form onSubmit={handleAdd}>
             <input className="input-field" placeholder="Movie Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required/>
@@ -82,7 +82,7 @@ export default function AdminPage() {
           </form>
         </div>
 
-        <div className="glass-panel" style={{overflowX: 'auto'}}>
+        <div className="glass-panel" style={{flex: '2 1 500px', overflowX: 'auto'}}>
           <h3 style={{marginBottom: '1rem'}}>Secure Database View</h3>
           <table style={{width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '500px'}}>
             <thead>
