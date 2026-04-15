@@ -5,3 +5,5 @@ webapp/node_modules/
 webapp/.next/
 webapp/cinema.db
 .DS_Store
+.env.local
+.env*.local
