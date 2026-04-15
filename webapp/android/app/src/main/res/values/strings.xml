@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Starstruck Cinemas</string>
+    <string name="title_activity_main">Starstruck Cinemas</string>
+    <string name="package_name">com.starstruck.app</string>
+    <string name="custom_url_scheme">com.starstruck.app</string>
+</resources>

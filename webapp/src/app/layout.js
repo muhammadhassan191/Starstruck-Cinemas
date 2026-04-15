@@ -20,13 +20,32 @@ export default function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/background.jpg" />
       </head>
       <body>
-        <nav className="no-print" style={{ background: 'rgba(0,0,0,0.8)', padding: '1rem', display: 'flex', gap: '1rem', backdropFilter: 'blur(20px)' }}>
-          <a href="/">🎬 Starstruck Cinemas</a>
-          <a href="/admin">Admin Shield</a>
-        </nav>
         <main className="container">
           {children}
         </main>
+        
+        {/* Floating Admin Button */}
+        <a href="/admin" className="no-print" style={{
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            background: 'linear-gradient(135deg, #FF2B5E, #FF5B84)',
+            color: 'white',
+            textDecoration: 'none',
+            padding: '6px 12px',
+            borderRadius: '20px',
+            boxShadow: '0 4px 12px rgba(255, 43, 94, 0.4)',
+            fontWeight: '600',
+            fontSize: '0.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            zIndex: 9999,
+            transition: 'transform 0.2s',
+          }}
+        >
+          🛡️ Admin Console
+        </a>
         
         {/* Service Worker Native Mount */}
         <script dangerouslySetInnerHTML={{

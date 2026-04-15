@@ -23,7 +23,6 @@ export default function Home() {
   const [msg, setMsg] = useState('');
   const [bookedSeatsList, setBookedSeatsList] = useState([]);
   const [bfsCount, setBfsCount] = useState(1);
-  const [dijkstraResult, setDijkstraResult] = useState(null);
 
   // Cinema & Discovery Flow State
   const [cinema, setCinema] = useState('Starstruck Central - New York');
@@ -102,8 +101,8 @@ export default function Home() {
     const basePrice = bookingMovie.price;
     
     let cost = basePrice;
-    if (premiumMod) cost += 5;
-    if (ecoMod) cost -= 2;
+    if (premiumMod) cost += 500;
+    if (ecoMod) cost -= 200;
 
     if (newSelection.includes(seatId)) {
       newSelection = newSelection.filter(s => s !== seatId);
@@ -146,8 +145,8 @@ export default function Home() {
            let newTotal = 0;
            candidateSeats.forEach(sid => {
              let cost = bookingMovie.price;
-             if(sid.startsWith('A')||sid.startsWith('B')) cost+=5;
-             if(sid.startsWith('G')||sid.startsWith('H')) cost-=2;
+             if(sid.startsWith('A')||sid.startsWith('B')) cost+=500;
+             if(sid.startsWith('G')||sid.startsWith('H')) cost-=200;
              newTotal += cost;
            });
            setSelectedSeats(candidateSeats);
@@ -170,22 +169,6 @@ export default function Home() {
     showToast(`🤖 Matrix Capacity Error: BFS could not find ${numRequired} seats physically grouped!`, 'error');
   };
 
-  const executeDijkstra = async (movie) => {
-    setBookingMovie(movie);
-    setBookingStep(4);
-    setDijkstraResult(null);
-    try {
-      const res = await fetch('/api/dijkstra', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ sourceCinema: cinema })
-      });
-      const data = await res.json();
-      setDijkstraResult(data);
-    } catch(e) {
-      setDijkstraResult({ error: 'Graph Traversal Runtime Exception' });
-    }
-  };
-
   const handleGenerateReceipt = () => {
     if(!bName) { setBError('Please enter your name.'); return; }
     if(selectedSeats.length < 1) { setBError('Please select at least 1 seat from the map.'); return; }
@@ -198,9 +181,15 @@ export default function Home() {
     try {
       const res = await fetch('/api/book', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ id: bookingMovie.id, seatIds: selectedSeats })
+        body: JSON.stringify({ id: bookingMovie.id, seatIds: selectedSeats, userId: user ? user.id : null, totalPrice: totalPrice })
       });
       if(res.ok) {
+        if (user) {
+            const earnedPoints = Math.floor(totalPrice * 0.1);
+            const updatedUser = {...user, reward_points: (user.reward_points || 0) + earnedPoints};
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+        }
         setMsg('Payment Successful!');
         fetchMovies(); 
         setBookingStep(3); // Go to Ticket Download
@@ -228,7 +217,7 @@ export default function Home() {
   }
 
   // Handle Mood Filtering + Personalization Sorting
-  let renderMovies = movies;
+  let renderMovies = movies.filter(m => m.cinema_location === cinema || m.cinema_location === 'All');
   if (activeMood !== 'All') {
     renderMovies = renderMovies.filter(m => m.genre === activeMood);
   } else if (favoriteGenre) {
@@ -339,7 +328,7 @@ export default function Home() {
         <div className="movie-grid">
           {renderMovies.map(movie => {
             const avail = movie.available_seats - movie.booked_seats;
-            const finalPrice = Math.max(0, movie.price - 2 + (movie.surge_price || 0));
+            const finalPrice = Math.max(0, movie.price + (movie.surge_price || 0));
 
             return (
               <div key={movie.id} className="movie-card">
@@ -352,7 +341,7 @@ export default function Home() {
                 <div className="movie-info">
                   <div>
                     <h3 className="movie-title">{movie.name}</h3>
-                    <p style={{fontSize: '0.85rem', color:'var(--text-muted)'}}>{movie.genre} • {movie.date}</p>
+                    <p style={{fontSize: '0.85rem', color:'var(--text-muted)'}}>{movie.genre} • {movie.date} • {movie.showtime || '18:00'}</p>
                     
                     {movie.ai_consensus && (
                       <p style={{fontSize: '0.8rem', fontStyle: 'italic', background: 'rgba(255,255,255,0.05)', padding: '8px', borderRadius: '8px', marginTop: '10px', borderLeft: '2px solid gold'}}>
@@ -360,15 +349,16 @@ export default function Home() {
                       </p>
                     )}
 
-                    <p style={{marginTop: '15px'}}>Starting at: <strong>${finalPrice}</strong> {movie.surge_price > 0 && <span style={{color: '#FF3B30', fontSize: '0.8rem'}}> (Surge Pricing applied)</span>}</p>
+                    <p style={{marginTop: '15px'}}>Starting at: <strong>Rs. {finalPrice}</strong> {movie.surge_price > 0 && <span style={{color: '#FF3B30', fontSize: '0.8rem'}}> (Surge Pricing applied)</span>}</p>
                     <p>Slots Available: <span style={{color: avail > 0 ? '#4CAF50' : '#FF3366', fontWeight:'600'}}>{avail}</span></p>
                   </div>
                   <button 
                     className="btn" 
-                    onClick={() => avail > 0 ? startBooking(movie) : executeDijkstra(movie)} 
-                    style={{ background: avail > 0 ? 'var(--primary)' : '#FF9933' }}
+                    onClick={() => avail > 0 ? startBooking(movie) : null} 
+                    style={{ background: avail > 0 ? 'var(--primary)' : '#888', cursor: avail <= 0 ? 'not-allowed' : 'pointer' }}
+                    disabled={avail <= 0}
                   >
-                    {avail > 0 ? 'Pick Seats' : 'Find via Dijkstra 🔭'}
+                    {avail > 0 ? 'Pick Seats' : 'Sold Out'}
                   </button>
                 </div>
               </div>
@@ -389,9 +379,9 @@ export default function Home() {
                 <h2 style={{marginBottom: '1rem', fontSize: '1.5rem'}}>Select Seats: {bookingMovie.name}</h2>
                 <div style={{marginBottom: '1rem'}}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color:'var(--text-muted)' }}>
-                    <span><span style={{color:'gold'}}>■</span> VIP (+£5)</span>
+                    <span><span style={{color:'gold'}}>■</span> VIP (+Rs. 500)</span>
                     <span><span style={{color:'#007AFF'}}>■</span> Regular</span>
-                    <span><span style={{color:'#34C759'}}>■</span> Eco (-£2)</span>
+                    <span><span style={{color:'#34C759'}}>■</span> Eco (-Rs. 200)</span>
                     <span><span style={{color:'#FF3B30'}}>■</span> Lock</span>
                   </div>
                 </div>
@@ -448,7 +438,7 @@ export default function Home() {
                 {selectedSeats.length > 0 && (
                   <div style={{background: 'rgba(255, 43, 94, 0.15)', padding: '15px', borderRadius: '12px', margin: '1rem 0'}}>
                     <p style={{margin: 0, fontSize: '0.9rem'}}>Seats: <strong>{selectedSeats.join(', ')}</strong></p>
-                    <h3 style={{margin: '5px 0 0'}}>Total: ${totalPrice.toFixed(2)}</h3>
+                    <h3 style={{margin: '5px 0 0'}}>Total: Rs. {totalPrice.toFixed(2)}</h3>
                   </div>
                 )}
                 
@@ -466,7 +456,7 @@ export default function Home() {
                   <p style={{marginBottom: '10px'}}><span style={{color: 'var(--text-muted)'}}>Location:</span> {cinema}</p>
                   <p style={{marginBottom: '10px'}}><span style={{color: 'var(--text-muted)'}}>Locked Seats:</span> {selectedSeats.join(', ')}</p>
                   <hr style={{border: '1px dashed rgba(255,255,255,0.2)', margin: '15px 0'}}/>
-                  <h3 style={{margin: 0}}>Final Payment: ${totalPrice.toFixed(2)}</h3>
+                  <h3 style={{margin: 0}}>Final Payment: Rs. {totalPrice.toFixed(2)}</h3>
                 </div>
                 
                 {bError && <p style={{color: '#FF2B5E', margin: '10px 0'}}>{bError}</p>}
@@ -476,55 +466,81 @@ export default function Home() {
             )}
 
             {bookingStep === 3 && (
-              <div id="pdf-ticket" style={{textAlign: 'center'}}>
+              <div style={{textAlign: 'center'}}>
                 <h2 style={{color: '#4CAF50', marginBottom: '1rem'}} className="no-print">Ticket Secured!</h2>
                 
-                <div style={{background: 'white', color: 'black', padding: '1.5rem', borderRadius: '16px', border: '2px solid #ccc', margin: '0 auto', maxWidth: '400px'}}>
-                  <h1 style={{fontSize: '1.3rem', marginBottom: '0.5rem'}}>{bookingMovie.name}</h1>
-                  <h3 style={{color: '#666', fontSize:'1rem', borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '10px'}}>{cinema}</h3>
-                  <div style={{textAlign: 'left', fontSize: '0.9rem'}}>
-                    <p><strong>Name:</strong> {bName}</p>
-                    <p><strong>Date:</strong> {bookingMovie.date}</p>
-                    <p><strong>Seats:</strong> {selectedSeats.join(', ')}</p>
-                    <p><strong>Paid:</strong> ${totalPrice.toFixed(2)}</p>
+                <div id="pdf-ticket-container" style={{background: 'white', color: 'black', padding: '2rem', borderRadius: '16px', border: 'none', margin: '0 auto', maxWidth: '450px', boxShadow: '0 8px 30px rgba(0,0,0,0.1)'}}>
+                  <div style={{ borderBottom: '2px dashed #ccc', paddingBottom: '15px', marginBottom: '15px' }}>
+                    <h1 style={{fontSize: '1.6rem', marginBottom: '0.5rem', color: '#111'}}>{bookingMovie.name}</h1>
+                    <h3 style={{color: '#FF2B5E', fontSize:'1.1rem'}}>{cinema}</h3>
                   </div>
                   
-                  <div style={{marginTop: '15px', display: 'flex', justifyContent: 'center'}}>
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=Ticket:${bName}-${bookingMovie.name}-${selectedSeats.join('')}`} alt="QR Code" width="120" height="120" />
+                  <div style={{textAlign: 'left', fontSize: '1rem', lineHeight: '1.6', color: '#333'}}>
+                    <p><strong>Customer Name:</strong> {bName}</p>
+                    <p><strong>Movie Name:</strong> {bookingMovie.name}</p>
+                    <p><strong>Cinema Location:</strong> {cinema}</p>
+                    <p><strong>Showtime:</strong> {bookingMovie.date} @ {bookingMovie.showtime || '18:00'}</p>
+                    <p><strong>Ticket Quantity:</strong> {selectedSeats.length} Tickets</p>
+                    <p><strong>Seat Assignments:</strong> {selectedSeats.join(', ')}</p>
+                    <br/>
+                    <p style={{fontSize:'1.2rem', fontWeight:'bold', borderTop: '1px solid #eee', paddingTop: '10px'}}>Total Paid: Rs. {totalPrice.toFixed(2)}</p>
                   </div>
-                  <p style={{fontSize: '0.7rem', marginTop: '10px', color: '#888'}}>Scan for entry</p>
+                  
+                  <div style={{marginTop: '25px', display: 'flex', justifyContent: 'center'}}>
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Ticket:${bName}-${bookingMovie.name}-${selectedSeats.join('')}`} alt="QR Code" width="150" height="150" />
+                  </div>
+                  <p style={{fontSize: '0.8rem', marginTop: '15px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px'}}>Scan for entry - Valid Ticket</p>
                 </div>
                 
-                <button className="btn no-print" onClick={() => window.print()} style={{background: '#007AFF', marginTop: '20px'}}>🖨️ Download PDF</button>
-                <button className="btn no-print" onClick={() => { setBookingStep(0); setBookingMovie(null); }} style={{background: 'transparent', marginTop: '10px'}}>Close</button>
-              </div>
-            )}
-            {bookingStep === 4 && (
-              <div style={{textAlign: 'center', padding: '20px'}}>
-                <h2 style={{color: '#FF9933', marginBottom: '1rem'}}>Graph Traversal Engine 🗺️</h2>
-                <p style={{color: 'var(--text-muted)'}}>Executing Dijkstra's Algorithm mapping alternative inventory networks for: <strong>{bookingMovie.name}</strong></p>
-                
-                {!dijkstraResult ? (
-                  <div style={{padding: '40px', fontSize: '2rem'}}>⚗️ Calculating Shortest Paths...</div>
-                ) : dijkstraResult.error ? (
-                  <div style={{padding: '20px', color: '#FF3B30'}}>{dijkstraResult.error}</div>
-                ) : (
-                  <div style={{background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '16px', marginTop: '20px', border: '1px solid rgba(255,153,51,0.3)', textAlign: 'left'}}>
-                    <h3 style={{color: '#34C759'}}>✓ Lowest Graph Edge Cost Extracted!</h3>
-                    <p style={{fontSize: '1.1rem', marginTop: '10px'}}>Optimal Branch: <strong>{dijkstraResult.destination}</strong></p>
-                    <p style={{fontFamily: 'monospace', margin: '10px 0', background: '#000', padding: '10px', borderRadius: '8px', color: '#0A84FF'}}>
-                      Shortest Path Vector:<br/> {dijkstraResult.path.join(' ➔ ')}<br/><br/>
-                      Total Cost: {dijkstraResult.distance} Miles
-                    </p>
-                    <p style={{fontWeight: 'bold', marginTop: '15px'}}>Reservations Detected: <span style={{color: 'gold'}}>{dijkstraResult.reserve_seats_found} seats available!</span></p>
+                <button 
+                  className="btn no-print" 
+                  onClick={async () => {
+                    const html2pdf = (await import('html2pdf.js')).default;
+                    const element = document.getElementById('pdf-ticket-container');
+                    const fileName = `Starstruck_Ticket_${bName.replace(/\s+/g, '_')}.pdf`;
+                    const opt = {
+                      margin:       1,
+                      filename:     fileName,
+                      image:        { type: 'jpeg', quality: 0.98 },
+                      html2canvas:  { scale: 2, useCORS: true },
+                      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                    };
                     
-                    <button className="btn" style={{marginTop: '20px', background: '#FF2B5E'}} onClick={() => { setCinema(dijkstraResult.destination); setBookingStep(0); fetchMovies(); showToast(`Relocating matrix context to ${dijkstraResult.destination}`); }}>
-                      Jump to Branch Node
-                    </button>
-                  </div>
-                )}
-                
-                <button className="btn" style={{background: 'transparent', marginTop: '15px'}} onClick={() => setBookingStep(0)}>Cancel Traversal</button>
+                    // Capacitor Native Implementation
+                    try {
+                      // Retrieve base64 strictly
+                      const base64Pdf = await html2pdf().set(opt).from(element).output('datauristring');
+                      const base64Data = base64Pdf.split(',')[1];
+
+                      // Dynamic imports for Capacitor so it doesn't break Web SSR
+                      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+                      const { Share } = await import('@capacitor/share');
+
+                      const writeResult = await Filesystem.writeFile({
+                        path: fileName,
+                        data: base64Data,
+                        directory: Directory.Documents,
+                        recursive: true
+                      });
+
+                      await Share.share({
+                        title: 'Movie Ticket - Starstruck Cinemas',
+                        text: `Attached is your ticket for ${bookingMovie.name} at ${cinema}.`,
+                        url: writeResult.uri,
+                        dialogTitle: 'Save or Share your PDF Ticket'
+                      });
+
+                    } catch (capacitorError) {
+                      console.error("Capacitor Native failed, falling back to Web:", capacitorError);
+                      // Fallback generic download for desktop browsers
+                      html2pdf().set(opt).from(element).save();
+                    }
+                  }} 
+                  style={{background: '#007AFF', marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%'}}
+                >
+                  <span style={{fontSize: '1.2rem'}}>🖨️</span> Download Official PDF
+                </button>
+                <button className="btn no-print" onClick={() => { setBookingStep(0); setBookingMovie(null); }} style={{background: 'transparent', marginTop: '10px', width: '100%'}}>Close Window</button>
               </div>
             )}
             
