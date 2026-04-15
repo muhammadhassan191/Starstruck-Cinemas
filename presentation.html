@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starstruck Cinemas - Technical Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #F8F5F0;
+            --primary: #4A3022;
+            --accent: #D7CCC8;
+            --text-dark: #2C1A12;
+            --text-light: #F8F5F0;
+            --shadow: 0 15px 35px rgba(74, 48, 34, 0.08);
+            --radius-lg: 30px;
+            --radius-md: 15px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        #presentation-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            perspective: 1000px;
+            padding: clamp(10px, 3vmin, 30px);
+            max-width: 100%;
+            max-height: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: clamp(10px, 3vmin, 30px);
+            left: clamp(10px, 3vmin, 30px);
+            right: clamp(10px, 3vmin, 30px);
+            bottom: clamp(10px, 3vmin, 30px);
+            background: #FFFFFF;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: clamp(20px, 5vmin, 50px);
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            transform: scale(0.95) translateY(20px);
+            will-change: transform, opacity;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            z-index: 10;
+        }
+
+        /* Abstract Shape Decorations */
+        .shape-blob {
+            position: absolute;
+            background: var(--accent);
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            opacity: 0.5;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .split-layout {
+            display: flex;
+            gap: clamp(10px, 3vw, 40px);
+            height: 100%;
+            width: 100%;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .split-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        @media (max-width: 768px) {
+            .split-layout {
+                flex-direction: column;
+            }
+            .split-col {
+                flex: none;
+                height: 50%;
+            }
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: clamp(10px, 2vh, 20px);
+            letter-spacing: -1px;
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: clamp(10px, 2vh, 25px);
+            line-height: 1.2;
+        }
+
+        h3 {
+            font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+            color: var(--primary);
+            margin-bottom: clamp(5px, 1.5vh, 15px);
+            line-height: 1.2;
+        }
+
+        p, li {
+            font-size: clamp(0.9rem, 1.8vw, 1.35rem);
+            line-height: 1.5;
+            color: var(--text-dark);
+            font-weight: 300;
+            margin-bottom: clamp(5px, 1.5vh, 15px);
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            position: relative;
+            padding-left: clamp(20px, 3vw, 30px);
+            margin-bottom: clamp(5px, 1vh, 15px);
+        }
+
+        li::before {
+            content: "•";
+            color: var(--primary);
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: clamp(1.2rem, 2vw, 1.5rem);
+            font-weight: bold;
+        }
+
+        .tag {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--text-light);
+            padding: clamp(4px, 1vh, 8px) clamp(10px, 2vw, 16px);
+            border-radius: 20px;
+            font-size: clamp(0.7rem, 1.2vw, 1rem);
+            font-weight: 600;
+            margin-bottom: clamp(10px, 2vh, 20px);
+        }
+
+        /* Custom Cards for Specs */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+            gap: clamp(10px, 3vh, 30px);
+            margin-top: clamp(10px, 2vh, 20px);
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--bg-color);
+            padding: clamp(15px, 3vmin, 30px);
+            border-radius: var(--radius-md);
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.02);
+            transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .member-badge {
+            background: var(--bg-color);
+            padding: clamp(8px, 1.5vh, 15px) clamp(15px, 2.5vw, 25px);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-right: clamp(5px, 1vw, 15px);
+            margin-top: clamp(10px, 2vh, 20px);
+            border: 1px solid rgba(74, 48, 34, 0.1);
+            font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+            white-space: normal;
+        }
+        
+        .slide * {
+            max-width: 100%;
+        }
+
+        /* Progress Bar */
+        #progress-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+            z-index: 100;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            border-radius: 2px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 40px;
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: justify-center;
+            padding: 12.5px;
+            box-shadow: 0 4px 10px rgba(74, 48, 34, 0.2);
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: scale(1.1);
+            background: #2C1A12;
+        }
+
+        .btn svg { width: 20px; height: 20px; fill: white; }
+    </style>
+</head>
+
+<body>
+
+    <div id="presentation-container">
+        
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="shape-blob" style="width: 400px; height: 400px; top: -100px; right: -100px;"></div>
+            <div class="content-wrapper" style="align-items: center; text-align: center;">
+                <span class="tag" style="background: transparent; color: var(--primary); border: 2px solid var(--primary);">Course: Mobile Application Development</span>
+                <h1 style="margin-top: clamp(10px, 2vh, 20px);">Starstruck Cinemas</h1>
+                <p style="max-width: 100%; margin: 0 auto clamp(5px, 1vh, 10px) auto; color: var(--primary); font-weight: 600;">Technical Design & Architecture Presentation</p>
+                <p style="font-weight: 600; color: #8c736a; margin-bottom: clamp(20px, 4vh, 40px);">Supervised by: Engr. Darakhshan Syed</p>
+                
+                <div style="display: flex; justify-content: center; gap: 10px; width: 100%; mt-4 flex-wrap: wrap;">
+                    <div class="member-badge">
+                        <strong style="color: var(--primary); display: block;">Muhammad Ali</strong>
+                        <span style="color: #666;">02-235232-013</span>
+                    </div>
+                    <div class="member-badge">
+                        <strong style="color: var(--primary); display: block;">Kissa Fatima</strong>
+                        <span style="color: #666;">02-235232-024</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Exec Summary -->
+        <div class="slide">
+            <div class="shape-blob" style="width: 500px; height: 500px; bottom: -200px; left: -100px;"></div>
+            <div class="content-wrapper split-layout">
+                <div class="split-col">
+                    <h1>Executive Blueprint</h1>
+                    <p>A comprehensive, multi-branch Next-Generation Mobile Application decoupled from standard web architectures.</p>
+                </div>
+                <div class="split-col card">
+                    <h3>Fundamental Objectives</h3>
+                    <ul>
+                        <li>Bridge Next.js directly into physical Android OS.</li>
+                        <li>Maintain Zero External API Dependencies.</li>
+                        <li>Engine a self-contained Offline Relational Database.</li>
+                        <li>Implement Native Hardware Intent manipulations.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Core Technology Stack -->
+        <div class="slide">
+            <div class="content-wrapper" style="justify-content: flex-start; padding-top: 50px;">
+                <span class="tag">The Engine Room</span>
+                <h2>The Core Technology Stack</h2>
+                <div class="comparison-grid">
+                    <div class="card">
+                        <h3>Frontend & Layout</h3>
+                        <p>Driven by <b>Next.js 15 (App Router)</b> mapped alongside React 18 Concurrent Rendering with GPU-accelerated Vanilla HTML/CSS Glassmorphism.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Mobile & Persistence</h3>
+                        <p>Powered by <b>Capacitor v6</b> embedded Native WebView bridges, communicating natively with a <b>Local SQLite3</b> Serverless database inside the OS.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Database Logic -->
+        <div class="slide">
+            <div class="content-wrapper">
+                <h2>Why SQLite instead of Firebase?</h2>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <tr style="border-bottom: 2px solid var(--accent); text-align: left;">
+                        <th style="padding: 20px; font-size: 1.5rem; color: #8c736a;">Traditional (Firebase/Mongo)</th>
+                        <th style="padding: 20px;"></th>
+                        <th style="padding: 20px; font-size: 1.5rem; color: var(--primary); font-weight:800;">Our Approach (SQLite)</th>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--accent);">
+                        <td style="padding: 20px;">Requires mandatory internet connection</td>
+                        <td style="text-align:center;">➔</td>
+                        <td style="padding: 20px; font-weight:bold;">Offline First, C-language file access</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--accent);">
+                        <td style="padding: 20px;">Introduces remote API latency (200ms+)</td>
+                        <td style="text-align:center;">➔</td>
+                        <td style="padding: 20px; font-weight:bold;">Local device processing (< 12ms)</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--accent);">
+                        <td style="padding: 20px;">Cloud schema structure</td>
+                        <td style="text-align:center;">➔</td>
+                        <td style="padding: 20px; font-weight:bold;">Self-Contained Relational Execution Engine</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 5: Multi Cinema / Economics -->
+        <div class="slide">
+            <div class="shape-blob" style="width: 300px; height: 300px; top: 50%; right: -50px;"></div>
+            <div class="content-wrapper split-layout">
+                <div class="split-col">
+                    <span class="tag">Database Architecture</span>
+                    <h2>Geographic Database Distribution</h2>
+                    <p>Engineered a Multi-Cinema Schema allowing 5 global locations (New York, LA, Queens, Bronx, Brooklyn). Strict relational mapping forces movies to filter by 'cinema_location'.</p>
+                </div>
+                <div class="split-col">
+                    <div class="card">
+                        <h3>The PKR Loyalty Trigger</h3>
+                        <p>We dynamically altered the monetary logic to Pakistani Rupees (Rs. 1000 - Rs. 3000).</p>
+                        <p>When an SQL `INSERT` is fired at checkout, Middleware calculates a flat 10% mathematical deduction and fires a simultaneous `UPDATE` to the user's loyalty trace array.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Mobile Compilation (Capacitor) -->
+        <div class="slide">
+            <div class="content-wrapper">
+                <span class="tag">Mobile Frameworks</span>
+                <h2>Why Capacitor over React Native?</h2>
+                <div class="comparison-grid" style="margin-top: 20px;">
+                    <div class="card">
+                        <h3 style="font-size: 1.8rem; color: var(--primary);">The WebView Injection</h3>
+                        <p>Unlike React Native which translates UI to widgets, Capacitor embeds our Next.js payload inside a blazing-fast native Android WebView container allowing flawless UI control.</p>
+                    </div>
+                    <div class="card">
+                        <h3 style="font-size: 1.8rem; color: var(--primary);">Bi-Directional Bridges</h3>
+                        <p>We didn't just wrap a webpage. We introduced Javascript-to-Java bridges, meaning our web code directly commands Android FileSystem and Share Trays via OS Intents.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Hardware Control Plugins -->
+        <div class="slide">
+            <div class="content-wrapper split-layout">
+                <div class="split-col card">
+                    <h3>@capacitor/filesystem</h3>
+                    <p>Allows the JS Payload to securely write encrypted Blob files directly into the Android hardware's Local Cache Directory tree without triggering security flags.</p>
+                </div>
+                <div class="split-col">
+                    <h2>Native Hardware Plugins</h2>
+                    <p>By executing Android SDK plugins via NPM, we shattered the typical web-browser permissions model entirely to allow deep hardware communication.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: The No-API Chatbot -->
+        <div class="slide">
+            <div class="shape-blob" style="width: 400px; height: 400px; left: 50%; top: -200px; transform: translateX(-50%);"></div>
+            <div class="content-wrapper" style="align-items: center; text-align: center;">
+                <span class="tag">Artificial Intelligence</span>
+                <h2>Zero External API Dependencies</h2>
+                <p style="max-width: 100%; margin: 0 auto clamp(15px, 3vh, 30px) auto;">Did we just plug in ChatGPT to act as a movie chatbot? No. To guarantee zero latency offline availability, we wrote a custom engine.</p>
+                <div class="comparison-grid" style="text-align: left; width: 100%;">
+                    <div class="card">
+                        <h3>O(N * T) Token Analysis</h3>
+                        <p>The engine physically slices incoming user strings into localized array tokens. It drops Stop Words mathematically and recursively matches Intent parameters across the SQLite Schema.</p>
+                    </div>
+                    <div class="card">
+                        <h3>RegEx Pattern Matching</h3>
+                        <p>Uses logical inference mapping ('time', 'price', 'review'). If a user says "Review matrix bad", it performs database updates entirely computationally.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Implicit Android Intents (PDF) -->
+        <div class="slide">
+            <div class="content-wrapper split-layout">
+                <div class="split-col">
+                    <span class="tag">Android Intent API</span>
+                    <h2>Native Implicit File Sharing</h2>
+                    <p>Standard web `window.print()` throws corrupt browser printing interfaces. We bypassed this fully.</p>
+                    <br>
+                    <p>We trigger an "Implicit Intent" (`ACTION_SEND`) passing the raw physical URI of a file. This elegantly forces the Android Operating System's native file popups to execute instead of Chrome.</p>
+                </div>
+                <div class="split-col card">
+                    <h3 style="text-align: center;">Document Output</h3>
+                    <ul style="margin-top:20px;">
+                        <li>Compiled purely via `html2pdf.js` Blob structures.</li>
+                        <li>Translates localized DIV blocks to binary Base64.</li>
+                        <li>Saves to Google Drive / local Android files.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Advanced BFS Seating -->
+        <div class="slide">
+            <div class="content-wrapper">
+                <span class="tag">Algorithms</span>
+                <h2>Breadth-First Search (BFS) Injection</h2>
+                <p style="max-width: 100%; margin-bottom: clamp(20px, 4vh, 40px);">UI block-selection is an algorithmic puzzle. Groups need to sit cohesively without fragmenting.</p>
+                
+                <div style="display: flex; gap: 30px;">
+                    <div class="card" style="flex:1">
+                        <h3>Spatial Auto-Grouping</h3>
+                        <p>We introduced a BFS scanning architecture over the available seating arrays. When a user requests '3' seats, the engine computationally traces the nearest non-broken column block to preserve family structure.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Summary Stack -->
+        <div class="slide">
+            <div class="content-wrapper" style="align-items: center; text-align: center;">
+                <span class="tag">Technical Review</span>
+                <h2>Architecture Retrospective</h2>
+                <p style="max-width: 100%; margin-bottom: clamp(10px, 2vh, 20px);">In conclusion: Bridging advanced Next.js models directly into Java hardware structures via JSON compilation blocks.</p>
+                <div style="display: flex; gap: clamp(10px, 2vw, 20px); flex-wrap: wrap; justify-content: center; margin-top: clamp(10px, 2vh, 20px); max-width: 100%;">
+                    <div class="member-badge" style="background: white; border-left: 4px solid var(--primary);"><strong>React 18 Concurrent Rendering</strong></div>
+                    <div class="member-badge" style="background: white; border-left: 4px solid var(--primary);"><strong>Capacitor OS Compilers</strong></div>
+                    <div class="member-badge" style="background: white; border-left: 4px solid var(--primary);"><strong>Local SQLite Protocol</strong></div>
+                    <div class="member-badge" style="background: white; border-left: 4px solid var(--primary);"><strong>Android ACTION_SEND Intents</strong></div>
+                    <div class="member-badge" style="background: white; border-left: 4px solid var(--primary);"><strong>Base64 Blob Serialization</strong></div>
+                    <div class="member-badge" style="background: white; border-left: 4px solid var(--primary);"><strong>Token-Scoring Intent Parser NLP</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Conclusion -->
+        <div class="slide">
+            <div class="shape-blob" style="width: 600px; height: 600px; top: 20%; left: 30%;"></div>
+            <div class="content-wrapper" style="align-items: center; text-align: center; justify-content: center;">
+                <h1 style="margin-bottom: clamp(5px, 1vh, 10px);">Final Evaluation</h1>
+                <p style="color: var(--primary);">A True Native Mobile Integration.</p>
+                <div style="margin-top: 50px;">
+                    <span class="tag" style="background: transparent; color: var(--primary); border: 2px solid var(--primary);">Starstruck - Mobile App Development Project</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Interface -->
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="prev-btn">
+            <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+        </button>
+        <button class="btn" id="next-btn">
+            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+        </button>
+    </div>
+
+    <!-- GSAP Animation Logic -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progress-bar');
+        let currentSlide = 0;
+        let isAnimating = false;
+
+        // Initialize progress
+        updateProgress();
+
+        // GSAP Setup
+        gsap.defaults({ ease: "power3.inOut" });
+
+        function goToSlide(index, direction) {
+            if (isAnimating || index === currentSlide || index < 0 || index >= slides.length) return;
+            isAnimating = true;
+
+            const current = slides[currentSlide];
+            const next = slides[index];
+
+            // Directional Logic
+            const yOffset = direction === 'next' ? 40 : -40;
+
+            // Animate Current Slide OUT
+            gsap.to(current, {
+                opacity: 0,
+                y: -yOffset,
+                scale: 0.95,
+                duration: 0.8,
+                onComplete: () => {
+                    current.classList.remove('active');
+                }
+            });
+
+            // Prepare Next Slide IN
+            next.classList.add('active');
+            gsap.fromTo(next,
+                { opacity: 0, y: yOffset, scale: 0.95 },
+                {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    duration: 0.8,
+                    delay: 0.1,
+                    onComplete: () => { isAnimating = false; }
+                }
+            );
+
+            // Animate Internal Elements for Morph feel
+            const nextElements = next.querySelectorAll('h1, h2, h3, p, ul, .card');
+            gsap.fromTo(nextElements,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.8, stagger: 0.05, delay: 0.2 }
+            );
+
+            currentSlide = index;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const percentage = ((currentSlide) / (slides.length - 1)) * 100;
+            progressBar.style.width = percentage + '%';
+        }
+
+        // Event Listeners
+        document.getElementById('next-btn').addEventListener('click', () => goToSlide(currentSlide + 1, 'next'));
+        document.getElementById('prev-btn').addEventListener('click', () => goToSlide(currentSlide - 1, 'prev'));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') {
+                goToSlide(currentSlide + 1, 'next');
+            } else if (e.key === 'ArrowLeft') {
+                goToSlide(currentSlide - 1, 'prev');
+            }
+        });
+
+        // Initial animation for the first slide
+        gsap.fromTo(slides[0].querySelectorAll('h1, p, .member-badge'),
+            { opacity: 0, y: 30 },
+            { opacity: 1, y: 0, duration: 1, stagger: 0.2, ease: "power4.out", delay: 0.2 }
+        );
+    </script>
+</body>
+</html>

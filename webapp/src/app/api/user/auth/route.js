@@ -1,25 +1,48 @@
-import { openDB } from '../../../../lib/db';
+import { getDB } from '../../../../lib/db';
 
 export async function POST(request) {
   const { action, email, password, name } = await request.json();
-  const db = await openDB();
+  const db = getDB();
 
   try {
     if (action === 'signup') {
-      // Create user
-      const existing = await db.get('SELECT * FROM Users WHERE email = ?', [email]);
-      if (existing) return new Response(JSON.stringify({ error: 'Email already registered' }), { status: 400 });
-      
-      const result = await db.run(
-        'INSERT INTO Users (email, password, name) VALUES (?, ?, ?)',
-        [email, password, name || email.split('@')[0]]
-      );
-      
-      const newUser = await db.get('SELECT id, name, email, reward_points FROM Users WHERE id = ?', [result.lastID]);
+      // Check if email already exists
+      const { data: existing } = await db
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (existing) {
+        return new Response(JSON.stringify({ error: 'Email already registered' }), { status: 400 });
+      }
+
+      // Insert new user
+      const { data: newUser, error: insertError } = await db
+        .from('users')
+        .insert([{
+          email,
+          password,
+          name: name || email.split('@')[0],
+        }])
+        .select('id, name, email, reward_points')
+        .single();
+
+      if (insertError) throw new Error(insertError.message);
+
       return new Response(JSON.stringify({ success: true, user: newUser }), { status: 201 });
-    } 
+    }
+
     else if (action === 'login') {
-      const user = await db.get('SELECT id, name, email, reward_points FROM Users WHERE email = ? AND password = ?', [email, password]);
+      const { data: user, error: loginError } = await db
+        .from('users')
+        .select('id, name, email, reward_points')
+        .eq('email', email)
+        .eq('password', password)
+        .maybeSingle();
+
+      if (loginError) throw new Error(loginError.message);
+
       if (user) {
         return new Response(JSON.stringify({ success: true, user }), { status: 200 });
       } else {

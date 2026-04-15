@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 export default function AdminPage() {
   const [movies, setMovies] = useState([]);
-  const [form, setForm] = useState({ name: '', price: '', available_seats: '', date: '', poster_path: '' });
+  const [form, setForm] = useState({ name: '', price: '', available_seats: '', date: '', showtime: '', cinema_location: 'Starstruck Central - New York', poster_path: '', genre: 'General' });
   
   // Auth state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,14 +45,14 @@ export default function AdminPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)
     });
-    setForm({ name: '', price: '', available_seats: '', date: '', poster_path: '' });
+    setForm({ name: '', price: '', available_seats: '', date: '', showtime: '', cinema_location: 'Starstruck Central - New York', poster_path: '', genre: 'General' });
     fetchMovies();
   };
 
   if (!isAuthenticated) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div className="glass-panel" style={{ width: '100%', maxWidth: '400px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '60vh', gap: '2rem' }}>
+        <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', position: 'relative' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '2rem', fontWeight: 600 }}>Admin Access</h2>
           <form onSubmit={handleLogin}>
             <input className="input-field" placeholder="Admin ID" value={authForm.username} onChange={e => setAuthForm({...authForm, username: e.target.value})} required/>
@@ -61,13 +61,21 @@ export default function AdminPage() {
             <button className="btn" type="submit">Verify Credentials</button>
           </form>
         </div>
+        <a href="/" style={{ color: '#FF2B5E', textDecoration: 'none', fontWeight: 600, border: '1px solid #FF2B5E', padding: '8px 16px', borderRadius: '20px' }}>
+          ← Back to Movies
+        </a>
       </div>
     );
   }
 
   return (
     <div className="container">
-      <h1 style={{marginBottom: '2rem'}}>Admin Control Panel</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1>Admin Control Panel</h1>
+        <a href="/" style={{ color: '#FF2B5E', textDecoration: 'none', fontWeight: 600, border: '1px solid #FF2B5E', padding: '8px 16px', borderRadius: '20px' }}>
+          ← Back to Movies
+        </a>
+      </div>
       
       <div style={{display: 'flex', flexWrap: 'wrap', gap: '2rem'}}>
         <div className="glass-panel" style={{flex: '1 1 300px', alignSelf: 'start'}}>
@@ -77,6 +85,15 @@ export default function AdminPage() {
             <input className="input-field" placeholder="Ticket Price" type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} required/>
             <input className="input-field" placeholder="Seat Capacity" type="number" value={form.available_seats} onChange={e => setForm({...form, available_seats: e.target.value})} required/>
             <input className="input-field" placeholder="Date (e.g. 2026-05-10)" value={form.date} onChange={e => setForm({...form, date: e.target.value})} required/>
+            <input className="input-field" placeholder="Time (e.g. 18:00)" type="time" value={form.showtime} onChange={e => setForm({...form, showtime: e.target.value})} required/>
+            <input className="input-field" placeholder="Genre (e.g. Action, Drama)" value={form.genre} onChange={e => setForm({...form, genre: e.target.value})} required/>
+            <select className="input-field" value={form.cinema_location} onChange={e => setForm({...form, cinema_location: e.target.value})} required style={{cursor: 'pointer'}}>
+              <option style={{color:'black'}} value="Starstruck Central - New York">Starstruck Central - New York</option>
+              <option style={{color:'black'}} value="Starstruck Luxe - Los Angeles">Starstruck Luxe - Los Angeles</option>
+              <option style={{color:'black'}} value="Starstruck IMAX - Queens">Starstruck IMAX - Queens</option>
+              <option style={{color:'black'}} value="Starstruck North - Bronx">Starstruck North - Bronx</option>
+              <option style={{color:'black'}} value="Starstruck Hub - Brooklyn">Starstruck Hub - Brooklyn</option>
+            </select>
             <input className="input-field" placeholder="Poster Image URL (optional)" value={form.poster_path} onChange={e => setForm({...form, poster_path: e.target.value})}/>
             <button className="btn" type="submit">Deploy to Database</button>
           </form>
@@ -87,19 +104,21 @@ export default function AdminPage() {
           <table style={{width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '500px'}}>
             <thead>
               <tr style={{borderBottom: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)'}}>
-                <th style={{padding: '12px 10px'}}>ID</th>
                 <th style={{padding: '12px 10px'}}>Name</th>
+                <th style={{padding: '12px 10px'}}>Genre & Time</th>
+                <th style={{padding: '12px 10px'}}>Location</th>
                 <th style={{padding: '12px 10px'}}>Price</th>
-                <th style={{padding: '12px 10px'}}>Seats</th>
+                <th style={{padding: '12px 10px'}}>Available</th>
                 <th style={{padding: '12px 10px'}}>Bookings</th>
               </tr>
             </thead>
             <tbody>
               {movies.map(m => (
                 <tr key={m.id} style={{borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s'}}>
-                  <td style={{padding: '12px 10px'}}>{m.id}</td>
                   <td style={{padding: '12px 10px', fontWeight: 500}}>{m.name}</td>
-                  <td style={{padding: '12px 10px'}}>${m.price}</td>
+                  <td style={{padding: '12px 10px'}}>{m.genre}<br/><span style={{fontSize: '0.8rem', color: '#aaa'}}>{m.date} {m.showtime}</span></td>
+                  <td style={{padding: '12px 10px', fontSize: '0.85rem'}}>{m.cinema_location}</td>
+                  <td style={{padding: '12px 10px'}}>Rs. {m.price}</td>
                   <td style={{padding: '12px 10px'}}>{m.available_seats}</td>
                   <td style={{padding: '12px 10px', color: m.booked_seats > 0 ? '#FF2B5E' : 'inherit'}}>{m.booked_seats}</td>
                 </tr>
